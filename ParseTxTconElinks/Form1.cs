@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using System.Collections.Specialized;
 using System.IO;
 using System.Web;
 using System.Web.UI;
@@ -14,6 +15,8 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using System.IO.Compression;
+using ParseTxTconElinks.Properties;
 /*
  * Json.NET  (Se usa para parsear la respuesta de las APIS de google)
  * 
@@ -49,6 +52,8 @@ namespace ParseTxTconElinks
         }
 
         string HTML_Final { get; set; }
+        string HTML_Final_Bootstrap { get; set; }
+        bool Generar_HTML_Texto_Plano = false;
         static string NombreSerie_SinIdentificar = "Sin Identificar";
 
         StringCollection Input_TxTfilePaths { get; set; }
@@ -56,6 +61,7 @@ namespace ParseTxTconElinks
         static bool Get_Google_INFO = false;
         static int WaitTime = 500; // En ms, para evitar abusar de la API de Google y que nos bloqueen
         static string MyPublicIP = string.Empty;
+        
         
 
         public Form1()
@@ -67,8 +73,12 @@ namespace ParseTxTconElinks
         {
             textBox_TxT_Path.Text = string.Empty;
             HTML_Final = string.Empty;
+            HTML_Final_Bootstrap = string.Empty;
             if (Get_Google_INFO)
                 MyPublicIP = GetExternalAddress().ToString();
+
+            toolStripMenuItem_HTML_TextoPlano.Checked = Generar_HTML_Texto_Plano;
+            toolStripMenuItem_HTML_New.Checked = !Generar_HTML_Texto_Plano;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -95,8 +105,33 @@ namespace ParseTxTconElinks
             // Save File:
             File.WriteAllText(Filename, this.HTML_Final, UTF8Encoding.UTF8);
 
+            if (!Generar_HTML_Texto_Plano)
+            {
+                Descomprimir_Assets(Path.GetDirectoryName(Filename));
+            }
+
             // Mensaje en la barra de estado:
             toolStripStatusLabel1.Text = "HTML Generado con éxito";
+        }
+
+        private void toolStripMenuItem_HTML_New_Click(object sender, EventArgs e)
+        {            
+            if (toolStripMenuItem_HTML_New.Checked)
+                toolStripMenuItem_HTML_TextoPlano.Checked = false;
+            else
+                toolStripMenuItem_HTML_TextoPlano.Checked = true;
+
+            Generar_HTML_Texto_Plano = toolStripMenuItem_HTML_TextoPlano.Checked;
+        }
+
+        private void toolStripMenuItem_HTML_TextoPlano_Click(object sender, EventArgs e)
+        {            
+            if (toolStripMenuItem_HTML_TextoPlano.Checked)
+                toolStripMenuItem_HTML_New.Checked = false;
+            else
+                toolStripMenuItem_HTML_New.Checked = true;
+
+            Generar_HTML_Texto_Plano = toolStripMenuItem_HTML_TextoPlano.Checked;
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -165,7 +200,11 @@ namespace ParseTxTconElinks
                     // 1) El HTML Head:
                     string Title = "Recopilación de eLinks";
                     string author = "Kerensky";
-                    string Head = Generate_HTML_Head(Title, Title, author);     
+                    string Head = string.Empty;
+                    if (Generar_HTML_Texto_Plano)
+                        Head = Generate_HTML_Head_TextoPlano(Title, Title, author);
+                    else
+                        Head = Generate_HTML_Head_Bootstrap(Title, Title, author);
                
                     // 2) El Body:
                     string NombreRestoSeries = "Otras";
@@ -201,9 +240,10 @@ namespace ParseTxTconElinks
                 catch (Exception Excepcion)
                 {
                     // Exceptions thrown by tasks will be propagated to the main thread 
-                    string Error_MSG = "Error parseando un txt" + Environment.NewLine
-                                        + Excepcion.Message + Environment.NewLine
-                                        + Excepcion.InnerException;
+                    string Error_MSG = "Error parseando un txt" + Environment.NewLine + Environment.NewLine
+                                        + Excepcion.Message + Environment.NewLine + Environment.NewLine
+                                        + Excepcion.InnerException + Environment.NewLine + Environment.NewLine
+                                        + Excepcion.StackTrace;
                     MessageBox.Show(Error_MSG, "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -279,7 +319,7 @@ namespace ParseTxTconElinks
 
             for (int i=0; i < Results.Count; i++)
             {
-                if (Results[i].NombreSerie.ToLowerInvariant() == NombreSerie.ToLowerInvariant())
+                if (Results[i].NombreSerie.Trim().ToLowerInvariant() == NombreSerie.Trim().ToLowerInvariant())
                 {
                     index_nombre_existe = i;
                     Ya_esiste = true;
@@ -331,7 +371,7 @@ namespace ParseTxTconElinks
         }
 
 
-        private string Generate_HTML_Head(string title, string description, string author)
+        private string Generate_HTML_Head_TextoPlano(string title, string description, string author)
         {
             return string.Format(@"<!DOCTYPE HTML PUBLIC ""-//W3C//DTD HTML 4.01//EN""      ""http://www.w3.org/TR/html4/strict.dtd"">
                                     <html>
@@ -340,6 +380,64 @@ namespace ParseTxTconElinks
                                     <meta name=""author"" content={2}>
                                     </head>
                                     ", title, description, author);
+        }
+
+        private string Generate_HTML_Head_Bootstrap(string title, string description, string author)
+        {
+            string Head = @"<!DOCTYPE html>
+                            <html lang=""es"">
+                                <head>
+                                <meta charset=""utf-8"">
+                                <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+                                <title>" + title + @"</title>
+	                            <meta name=""description"" content=" + description + @">
+	                            <meta name=""author"" content=" + author + @">
+                                <link href=""assets/bootstrap.min.css"" rel=""stylesheet"">
+                                <style type=""text/css"">
+                                    body {
+                                    padding-top: 60px;
+                                    padding-bottom: 40px;
+                                    }
+                                    .sidebar-nav {
+                                    padding: 9px 0;
+                                    }
+	                                .fuente-peque ul{
+	                                font-size: 10px;
+		                            margin-left: 4px;
+	                                }
+                                    @media (max-width: 980px) {
+                                    .navbar-text.pull-right {
+                                        float: none;
+                                        padding-left: 5px;
+                                        padding-right: 5px;
+                                    }
+                                    }
+	                                .sidebar-nav-fixed {
+			                            position:fixed;
+			                            top:44px;
+			                            width:21.97%;
+			                            padding: 9px 0;
+		                            }
+		                            @media (max-width: 767px) {
+			                            .sidebar-nav-fixed {
+				                            position:static;
+				                            width:auto;
+			                            }
+		                            }
+		                            @media (max-width: 979px) {
+			                            .sidebar-nav-fixed {
+				                            top:70px;
+			                            }
+		                            }
+                                </style>
+                                <link href=""assets/bootstrap-responsive.min.css"" rel=""stylesheet"">
+
+                                <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+                                <!--[if lt IE 9]>
+                                    <script src=""assets/html5shiv.js""></script>
+                                <![endif]-->
+                            </head>";
+            return Head;
         }
 
 
@@ -356,13 +454,41 @@ namespace ParseTxTconElinks
 
             // 1) El HTML Header (Menu Letras iniciales):
             // ----------------------------------------
-            string Header = Generate_HTML_Menu(LetrasIniciales, NombreRestoSeries);
-            Body += Header + Environment.NewLine;
+            string Header = string.Empty;
+            if (this.Generar_HTML_Texto_Plano)
+                Header = Generate_HTML_Menu(LetrasIniciales, NombreRestoSeries);
+            else
+            {
+                string Header_Start = Header_Bootstrap_Start();
 
+                string NavBar = Generate_HTML_Bootstrap_Menu_DropDown(LetrasIniciales, NombreRestoSeries,
+                                                                      Series_Empieza_con_Letra_o_Digito,
+                                                                      Series_No_Empieza_con_Letra_o_digito,
+                                                                      Series_Sin_Identificar);
+
+                string Header_Intermedio = Header_Bootstrap_Intermedio();
+
+                string SideBar = Generate_HTML_Bootstrap_Menu_Sidebar(LetrasIniciales, NombreRestoSeries,
+                                                                      Series_Empieza_con_Letra_o_Digito,
+                                                                      Series_No_Empieza_con_Letra_o_digito,
+                                                                      Series_Sin_Identificar);
+
+                string Header_Final = "</div><!--/.well -->" + Environment.NewLine + "</div><!--/span-->";
+
+                Header = Header_Start + NavBar + Header_Intermedio + SideBar + Header_Final;
+            }
+
+            Body += Header + Environment.NewLine;
 
 
             // 2) Generamos el listado de las series agrupadas:
             // ------------------------------------------------
+
+            if (!this.Generar_HTML_Texto_Plano)
+                Body += @"<div class=""span9"" id=""listado-series"">";
+
+            Body += Generate_HTML_Menu(LetrasIniciales, NombreRestoSeries);
+
             List<Links_misma_Serie> Series_Empiezan_por_Digito = new List<Links_misma_Serie>();
 
             // Secciones con La Letra inicial de id
@@ -401,11 +527,98 @@ namespace ParseTxTconElinks
             string Series_No_Identificadas = Make_Letter_Section(NombreSerie_SinIdentificar, Series_Sin_Identificar);
             Body += Series_No_Identificadas;
 
+
+            if (!this.Generar_HTML_Texto_Plano)
+                Body += Body_End_Bootstrap();
+
+
             // Close Body Tag:
-            Body +=  Environment.NewLine+ "</body>";
+            Body += Environment.NewLine+ "</body>";
 
             return Body;
         }
+
+        private string Header_Bootstrap_Start()
+        {
+            return @"
+                    <div class=""navbar navbar-fixed-top"">
+                      <div class=""navbar-inner"">
+                        <div class=""container-fluid"">
+                          <button type=""button"" class=""btn btn-navbar"" data-toggle=""collapse"" data-target="".nav-collapse"">
+                            <span class=""icon-bar""></span>
+                            <span class=""icon-bar""></span>
+                            <span class=""icon-bar""></span>
+                          </button>
+                          <a class=""brand"" href=""https://github.com/Kerensky25/ParseTxTeLinks"">ParseTxTeLinks</a>
+                          <div class=""nav-collapse collapse"">
+                            <p class=""navbar-text pull-right"">
+                              by Kerensky
+                            </p>
+                            <ul class=""nav small""> 
+				                <li class=""divider-vertical""></li>			
+				                <li><p class=""navbar-text"">CTRL+F para activar el Buscador</p></li>		
+				                <li class=""divider-vertical""></li>			
+				                <li class=""dropdown"">
+                                  <a href=""#"" class=""dropdown-toggle"" data-toggle=""dropdown"">SERIES <b class=""caret""></b></a>
+                    ";
+        }
+
+        private string Header_Bootstrap_Intermedio()
+        {
+            return @"
+                                </li>
+				                <li class=""divider-vertical""></li>	
+				                <li><button class=""btn"" id=""boton-mostrar-sidebar"" onclick=""if ($('#menu-series-lateral').is(':visible')){$('#menu-series-lateral').hide('slow'); $('#menu-series-lateral').attr('class', 'span1'); $('#listado-series').attr('class', 'span11')} else {$('#listado-series').attr('class', 'span9'); $('#menu-series-lateral').attr('class', 'span3'); $('#menu-series-lateral').show('slow')}"">Mostrar/Ocultar Menu Lateral</button></li>					
+                            </ul>
+                            </div><!--/.nav-collapse -->
+                        </div>
+                        </div>
+                    </div>
+
+                    <div class=""container-fluid"">
+                        <div class=""row-fluid"">
+	  
+                        <div class=""span3"" id=""menu-series-lateral"">
+                            <div class=""well sidebar-nav-fixed"">
+                    ";
+        }
+
+        private string Body_End_Bootstrap()
+        {
+            return @"
+                </div><!--/span-->		
+                  </div><!--/row-->
+                  <hr>
+                </div><!--/.fluid-container-->
+
+                <!-- javascript
+                ================================================== -->
+                <!-- Placed at the end of the document so the pages load faster -->
+                <script src=""assets/jquery.js""></script>
+                <script src=""assets/bootstrap.min.js""></script>
+	
+	            <script type=""text/javascript"">
+
+	                $(document).ready(function() {
+
+                        $('#menu-series-lateral').hide();
+
+		                $(""#my-collapse-nav > li > a[data-target]"").parent('li').hover(
+			                function() { 
+				                target = $(this).children('a[data-target]').data('target');
+				                $(target).collapse('show') 
+			                },
+			                function() { 
+				                target = $(this).children('a[data-target]').data('target'); 
+				                $(target).collapse('hide');
+			                }
+		                );
+	                });
+
+	            </script>
+                ";
+        }
+
 
         private string Make_Letter_Section(string NombreSeccion, List<Links_misma_Serie> Series_Mismo_Conjunto)
         {
@@ -431,8 +644,11 @@ namespace ParseTxTconElinks
                 writer.Write(NombreSeccion);
                 writer.RenderEndTag(); // </h1>
 
+                
+
                 foreach (Links_misma_Serie Serie in Series_Mismo_Conjunto)
-                {                    
+                {
+                    writer.AddAttribute(HtmlTextWriterAttribute.Id, Serie.NombreSerie.ToUpperInvariant());
                     writer.RenderBeginTag(HtmlTextWriterTag.Div); // Seccion Serie
 
                     if (!String.IsNullOrWhiteSpace(Serie.IMDB_Link))
@@ -440,7 +656,7 @@ namespace ParseTxTconElinks
                         writer.AddAttribute(HtmlTextWriterAttribute.Href, Serie.IMDB_Link);
                         writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="IMDB_Link">
                     }
-
+                                        
                     writer.RenderBeginTag(HtmlTextWriterTag.H3);
                     writer.Write(Serie.NombreSerie.ToUpperInvariant());
                     writer.RenderEndTag(); // </h3>
@@ -492,9 +708,9 @@ namespace ParseTxTconElinks
         }
 
 
-        private string Generate_HTML_Menu(List<char> LetrasInicial, string NombreRestoSeries)
+        private string Generate_HTML_Menu(List<char> LetrasIniciales, string NombreRestoSeries)
         {
-            // MENU para el acceso directo -> Letras Iniciales + "[0-9]" + "Otras" + "Sin Identificar"
+            // MENU para el acceso directo -> Letras Iniciales + "[0-9]" + "Otras"(NombreRestoSeries)  + "Sin Identificar"
 
             StringWriter stringWriter = new StringWriter();
 
@@ -513,7 +729,7 @@ namespace ParseTxTconElinks
                 writer.RenderBeginTag(HtmlTextWriterTag.H2);
 
                 writer.Indent++;
-                foreach(char Letra in LetrasInicial)
+                foreach (char Letra in LetrasIniciales)
                 {
                     if (char.IsLetter(Letra))
                     {
@@ -551,6 +767,429 @@ namespace ParseTxTconElinks
             return stringWriter.ToString();
         }
 
+        private string Generate_HTML_Bootstrap_Menu_DropDown(List<char> LetrasIniciales, string NombreRestoSeries,
+                                                             List<Links_misma_Serie> Series_Empieza_con_Letra_o_Digito,
+                                                             List<Links_misma_Serie> Series_No_Empieza_con_Letra_o_digito,
+                                                             List<Links_misma_Serie> Series_Sin_Identificar)
+        {
+            // MENU para el acceso directo -> Letras Iniciales + "[0-9]" + "Otras"(NombreRestoSeries) + "Sin Identificar"
+            //
+            //<ul class="dropdown-menu">
+            //    <li class="dropdown-submenu">
+            //        <a href="#">A</a>
+            //        <ul class="dropdown-menu">
+            //            <li><a href="#">Second level link</a></li>
+            //            <li><a href="#">Second level link</a></li>
+            //            <li><a href="#">Second level link</a></li>
+            //            <li><a href="#">Second level link</a></li>
+            //            <li><a href="#">Second level link</a></li>
+            //        </ul>
+            //    </li>
+            //    <li class="dropdown-submenu">
+            //        <a href="#">B</a>
+            //        <ul class="dropdown-menu">
+            //            <li><a href="#">Second level link</a></li>
+            //            <li><a href="#">Second level link</a></li>
+            //            <li><a href="#">Second level link</a></li>
+            //            <li><a href="#">Second level link</a></li>
+            //            <li><a href="#">Second level link</a></li>
+            //        </ul>
+            //    </li>
+            //</ul>
+
+            StringWriter stringWriter = new StringWriter();
+
+            // Put HtmlTextWriter in using block because it needs to call Dispose.
+            using (HtmlTextWriter writer = new HtmlTextWriter(stringWriter))
+            {
+                writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-menu");
+                writer.RenderBeginTag(HtmlTextWriterTag.Ul);
+                writer.Indent++;
+                
+                // -------------------------------------------------------------------------------
+                // ------------------------------------------------------------------------------
+
+
+                // ----------------
+                //      LETRAS
+                // ----------------
+
+                foreach (char Letra in LetrasIniciales)
+                {
+                    if (char.IsLetter(Letra))
+                    {
+                        writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-submenu");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Li);
+                        writer.Indent++;
+
+
+                        string URL_Letra = "#Letra " + Letra.ToString().ToUpperInvariant();
+                        writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Letra);
+                        writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                        writer.Write(Letra.ToString().ToUpperInvariant());
+                        writer.RenderEndTag(); // </a>   
+
+
+                        writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-menu");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Ul);
+                        writer.Indent++;
+
+                        writer.Write(Genera_Lista_items_ul_NombreSeries(Letra.ToString(), Series_Empieza_con_Letra_o_Digito));
+
+                        writer.Indent--;
+                        writer.RenderEndTag(); // </ul>
+
+
+                        writer.Indent--;
+                        writer.RenderEndTag(); // </li>
+                    }
+                }
+
+
+
+                // ----------------
+                //      NÚMEROS
+                // ----------------
+                writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-submenu");
+                writer.RenderBeginTag(HtmlTextWriterTag.Li);
+                writer.Indent++;
+
+
+                string URL_Numbers = "#Numbers";
+                writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Numbers);
+                writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                writer.Write("[0-9]");
+                writer.RenderEndTag(); // </a> 
+
+
+                writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-menu");
+                writer.RenderBeginTag(HtmlTextWriterTag.Ul);
+                writer.Indent++;
+
+                writer.Write(Genera_Lista_items_ul_NombreSeries("Numbers", Series_Empieza_con_Letra_o_Digito));
+
+                writer.Indent--;
+                writer.RenderEndTag(); // </ul>
+
+
+                writer.Indent--;
+                writer.RenderEndTag(); // </li>
+
+
+
+
+                // ----------------
+                //      OTRAS
+                // ----------------
+                writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-submenu");
+                writer.RenderBeginTag(HtmlTextWriterTag.Li);
+                writer.Indent++;
+
+
+                string URL_Otras = "#" + NombreRestoSeries;
+                writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Otras);
+                writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                writer.Write("Otras");
+                writer.RenderEndTag(); // </a>
+
+
+                writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-menu");
+                writer.RenderBeginTag(HtmlTextWriterTag.Ul);
+                writer.Indent++;
+
+                writer.Write(Genera_Lista_items_ul_NombreSeries(NombreRestoSeries, Series_No_Empieza_con_Letra_o_digito));
+
+                writer.Indent--;
+                writer.RenderEndTag(); // </ul>
+
+
+                writer.Indent--;
+                writer.RenderEndTag(); // </li>
+
+
+
+
+                // --------------------------
+                //      SIN IDENTIFICAR
+                // --------------------------
+                writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-submenu");
+                writer.RenderBeginTag(HtmlTextWriterTag.Li);
+                writer.Indent++;
+
+
+                string URL_SinIdentificar = "#" + NombreSerie_SinIdentificar;
+                writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_SinIdentificar);
+                writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                writer.Write(NombreSerie_SinIdentificar);
+                writer.RenderEndTag(); // </a>
+
+
+                writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-menu");
+                writer.RenderBeginTag(HtmlTextWriterTag.Ul);
+                writer.Indent++;
+
+                writer.Write(Genera_Lista_items_ul_NombreSeries(NombreRestoSeries, Series_Sin_Identificar));
+
+                writer.Indent--;
+                writer.RenderEndTag(); // </ul>
+
+
+                writer.Indent--;
+                writer.RenderEndTag(); // </li>
+
+
+                // -------------------------------------------------------------------------------
+                // -------------------------------------------------------------------------------
+
+
+                writer.Indent--;
+                writer.RenderEndTag(); // </ul>
+            }
+            // Return the result.
+            return stringWriter.ToString();
+        }
+
+        private string Generate_HTML_Bootstrap_Menu_Sidebar(List<char> LetrasIniciales, string NombreRestoSeries,
+                                                            List<Links_misma_Serie> Series_Empieza_con_Letra_o_Digito,
+                                                            List<Links_misma_Serie> Series_No_Empieza_con_Letra_o_digito,
+                                                            List<Links_misma_Serie> Series_Sin_Identificar)
+        {
+            //<ul class="nav nav-list fuente-peque" id="my-collapse-nav">  
+            //    <li class="nav-header">SERIES</li>  
+            //    <li class="divider"></li>
+            //    <li><a href="#" data-target="#demo">A</a> 
+            //      <ul id="demo" class="collapse" style="height: 0px;">
+            //          <li><a href="#">Second level link</a></li>
+            //          <li><a href="#">Second level link</a></li>
+            //          <li><a href="#">Second level link</a></li>
+            //       </ul>
+            //    </li>  
+            //    <li><a href="#" data-target="#demo2">B</a></li> 
+            //    <ul id="demo2" class="collapse" style="height: 0px;">
+            //      <li><a href="#">Second level link</a></li>
+            //      <li><a href="#">Second level link</a></li>
+            //      <li><a href="#">Second level link</a></li>
+            //    </ul>
+            //</ul>
+
+           StringWriter stringWriter = new StringWriter();
+
+            // Put HtmlTextWriter in using block because it needs to call Dispose.
+            using (HtmlTextWriter writer = new HtmlTextWriter(stringWriter))
+            {
+                writer.AddAttribute(HtmlTextWriterAttribute.Class, "nav nav-list fuente-peque");
+                writer.AddAttribute(HtmlTextWriterAttribute.Id, "my-collapse-nav");
+                writer.RenderBeginTag(HtmlTextWriterTag.Ul);
+                writer.Indent++;
+
+                // ------------------------------------------------------------------------------
+
+                writer.AddAttribute(HtmlTextWriterAttribute.Class, "nav-header");
+                writer.RenderBeginTag(HtmlTextWriterTag.Li);
+                writer.Write("SERIES");
+                writer.RenderEndTag(); // </li>
+
+                // ------------------------------------------------------------------------------
+
+                writer.AddAttribute(HtmlTextWriterAttribute.Class, "divider");
+                writer.RenderBeginTag(HtmlTextWriterTag.Li);
+                writer.RenderEndTag(); // </li>
+
+                // -------------------------------------------------------------------------------
+                // -------------------------------------------------------------------------------
+
+                // ----------------
+                //      LETRAS
+                // ----------------
+                int counter = 1;
+
+                foreach (char Letra in LetrasIniciales)
+                {
+                    if (char.IsLetter(Letra))
+                    {
+                        // <li><a href="#" data-target="#demo">A</a> 
+                        writer.RenderBeginTag(HtmlTextWriterTag.Li);
+                        writer.Indent++;
+
+
+                        // <a href="#" data-target="#demo">A</a>
+                        string URL_Letra = "#Letra " + Letra.ToString().ToUpperInvariant();
+                        writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Letra);
+                        writer.AddAttribute("data-target", "#demo" + counter.ToString());
+                        
+                        writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                        writer.Write(Letra.ToString().ToUpperInvariant());
+                        writer.RenderEndTag(); // </a>   
+
+                        //<ul id="demo" class="collapse" style="height: 0px;">
+                        writer.AddAttribute(HtmlTextWriterAttribute.Id, "demo" + counter.ToString());
+                        writer.AddAttribute(HtmlTextWriterAttribute.Class, "collapse");
+                        writer.AddAttribute(HtmlTextWriterAttribute.Style, "height: 0px;");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Ul);
+                        writer.Indent++;
+
+                        writer.Write(Genera_Lista_items_ul_NombreSeries(Letra.ToString(), Series_Empieza_con_Letra_o_Digito));
+
+                        writer.Indent--;
+                        writer.RenderEndTag(); // </ul>
+                        
+
+                        writer.Indent--;
+                        writer.RenderEndTag(); // </li>
+
+                        counter++;
+                    }
+                }
+                
+
+
+                // ----------------
+                //      NÚMEROS
+                // ----------------
+                writer.RenderBeginTag(HtmlTextWriterTag.Li);
+                writer.Indent++;
+
+                string URL_Numbers = "#Numbers";
+                writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Numbers);
+                writer.AddAttribute("data-target", "#demo" + counter.ToString());
+                
+                writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                writer.Write("[0-9]");
+                writer.RenderEndTag(); // </a>
+
+                writer.AddAttribute(HtmlTextWriterAttribute.Id, "demo" + counter.ToString());
+                writer.AddAttribute(HtmlTextWriterAttribute.Class, "collapse");
+                writer.AddAttribute(HtmlTextWriterAttribute.Style, "height: 0px;");
+                writer.RenderBeginTag(HtmlTextWriterTag.Ul);
+                writer.Indent++;
+
+                writer.Write(Genera_Lista_items_ul_NombreSeries("Numbers", Series_Empieza_con_Letra_o_Digito));
+
+                writer.Indent--;
+                writer.RenderEndTag(); // </ul>
+
+
+                writer.Indent--;
+                writer.RenderEndTag(); // </li>
+
+                counter++;
+
+
+
+                // ----------------
+                //      OTRAS
+                // ----------------
+                writer.RenderBeginTag(HtmlTextWriterTag.Li);
+                writer.Indent++;
+
+                string URL_Otras = "#" + NombreRestoSeries;
+                writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Otras);
+                writer.AddAttribute("data-target", "#demo" + counter.ToString());
+
+                writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                writer.Write("Otras");
+                writer.RenderEndTag(); // </a>
+
+                writer.AddAttribute(HtmlTextWriterAttribute.Id, "demo" + counter.ToString());
+                writer.AddAttribute(HtmlTextWriterAttribute.Class, "collapse");
+                writer.AddAttribute(HtmlTextWriterAttribute.Style, "height: 0px;");
+                writer.RenderBeginTag(HtmlTextWriterTag.Ul);
+                writer.Indent++;
+
+                writer.Write(Genera_Lista_items_ul_NombreSeries(NombreRestoSeries, Series_No_Empieza_con_Letra_o_digito));
+
+                writer.Indent--;
+                writer.RenderEndTag(); // </ul>
+
+
+                writer.Indent--;
+                writer.RenderEndTag(); // </li>
+
+                counter++;
+
+
+
+
+                // --------------------------
+                //      SIN IDENTIFICAR
+                // --------------------------
+                writer.RenderBeginTag(HtmlTextWriterTag.Li);
+                writer.Indent++;
+
+                string URL_SinIdentificar = "#" + NombreSerie_SinIdentificar;
+                writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_SinIdentificar);
+                writer.AddAttribute("data-target", "#demo" + counter.ToString());
+
+                writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                writer.Write(NombreSerie_SinIdentificar);
+                writer.RenderEndTag(); // </a>
+
+                writer.AddAttribute(HtmlTextWriterAttribute.Id, "demo" + counter.ToString());
+                writer.AddAttribute(HtmlTextWriterAttribute.Class, "collapse");
+                writer.AddAttribute(HtmlTextWriterAttribute.Style, "height: 0px;");
+                writer.RenderBeginTag(HtmlTextWriterTag.Ul);
+                writer.Indent++;
+
+                writer.Write(Genera_Lista_items_ul_NombreSeries(NombreRestoSeries, Series_Sin_Identificar));
+
+                writer.Indent--;
+                writer.RenderEndTag(); // </ul>
+
+
+                writer.Indent--;
+                writer.RenderEndTag(); // </li>
+
+                counter++;
+
+
+                // -------------------------------------------------------------------------------
+                // -------------------------------------------------------------------------------
+
+                writer.Indent--;
+                writer.RenderEndTag(); // </ul>
+            }
+            // Return the result.
+            return stringWriter.ToString();
+        }
+
+
+        private string Genera_Lista_items_ul_NombreSeries(string Texto_Inicial, List<Links_misma_Serie> Series)
+        {
+            //<li><a href="#">[Conjunto 1]Nombre Serie</a></li>
+            //<li><a href="#">[Conjunto 1]Nombre Serie</a></li>
+            //<li><a href="#">[Conjunto 1]Nombre Serie</a></li>
+
+            StringWriter stringWriter = new StringWriter();
+
+            // Put HtmlTextWriter in using block because it needs to call Dispose.
+            using (HtmlTextWriter writer = new HtmlTextWriter(stringWriter))
+            {
+                foreach (Links_misma_Serie Serie in Series)
+                {
+                    string SeriesName = Serie.NombreSerie;
+                    string href_SeriesName = "#" + Serie.NombreSerie.ToUpperInvariant();
+                    
+                    if ( ( (Texto_Inicial == "Numbers") && (char.IsDigit(SeriesName[0])) )
+                        || ((Texto_Inicial.Length == 1) && (char.IsLetter(SeriesName[0])) && (SeriesName.StartsWith(Texto_Inicial, StringComparison.InvariantCultureIgnoreCase)))
+                        || ((SeriesName == NombreSerie_SinIdentificar) && (Texto_Inicial == NombreSerie_SinIdentificar))
+                        || ( (Texto_Inicial.Length > 1) && (!char.IsLetterOrDigit(SeriesName[0])) ) )
+                    {
+                        writer.RenderBeginTag(HtmlTextWriterTag.Li);
+
+                        writer.AddAttribute(HtmlTextWriterAttribute.Href, href_SeriesName);
+                        writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                        writer.Write(SeriesName);
+                        writer.RenderEndTag(); // </a>
+
+                        writer.RenderEndTag(); // </li>
+                    }
+                }
+            }
+
+            // Return the result.
+            return stringWriter.ToString();
+        }
+
         #endregion
 
 
@@ -576,14 +1215,18 @@ namespace ParseTxTconElinks
                     string eLink_decoded = HttpUtility.UrlDecode(eLink_RAW);
 
                     // 2) Nombre de la serie:
-                    eLink_decoded = eLink_decoded.Replace(".", " ").Replace("_", " ");
+                    eLink_decoded = eLink_decoded.Replace("_", " ");
                     string NombreSerie = GetNombreSerie(eLink_decoded);
 
                     // Si no se dectecto el nombre buscando un patrón (Serie+Episodio), se busca el texto que se va repitiendo:
                     if ( (String.IsNullOrWhiteSpace(NombreSerie)) && (i < TxT_Contenido.Length - 1) )
                     {
-                        string eLink_decoded_siguiente = HttpUtility.UrlDecode(TxT_Contenido[i+1]);
-                        NombreSerie = GetNombreSerieSiSeRepite(eLink_decoded, eLink_decoded_siguiente, LongitudTextoComunMinima);
+                        //string eLink_decoded_siguiente = HttpUtility.UrlDecode(TxT_Contenido[i + 1]);
+                        //NombreSerie = GetNombreSerieSiSeRepite(eLink_decoded, eLink_decoded_siguiente, LongitudTextoComunMinima);
+
+                        float Porcentaje_variacion_maximo = 0.8F;
+                        LongitudTextoComunMinima = 6; // Nº caracteres comunes con el siguiente para considerarse de la misma serie
+                        NombreSerie = GetNombreSerieSiSeRepite(TxT_Contenido, i, Porcentaje_variacion_maximo, LongitudTextoComunMinima);
                     }
 
                     
@@ -658,7 +1301,7 @@ namespace ParseTxTconElinks
             string NombreSerie = string.Empty;
             input = Format_Decoded_eLink(input);
             //input = input.ToLowerInvariant();
-            input = EliminaTextoEntreCorchetesParentesis(input);
+            input = EliminaTextoEntreCorchetesParentesis(input).Replace(".", " ").Trim();
 
 
             // Regex buscando la cadena:
@@ -672,7 +1315,7 @@ namespace ParseTxTconElinks
             string Pattern7 = "(Parte|parte)[0-9]{0,3}";
             string Pattern8 = "(Ep|ep)[0-9]{0,3}";
             string Pattern9 = "(E|e)[0-9]{1,3}";
-            string Pattern10 = "(Cd|cd|Cd |cd )[0-9]{1,3}";
+            string Pattern10 = "(CD|Cd|cd|CD |Cd |cd )[0-9]{1,3}";
 
             Match match = Regex.Match(input, Pattern, RegexOptions.CultureInvariant);
 
@@ -680,69 +1323,46 @@ namespace ParseTxTconElinks
                 NombreSerie = Formate_Nombre_Series(input, match.Index);
 
             if (String.IsNullOrWhiteSpace(NombreSerie))
-            {
-                // Probamos usando el patrón: S<Numero>E<Numero>
-                match = Regex.Match(input, Pattern2, RegexOptions.CultureInvariant);
-                if (match.Success)
-                    NombreSerie = Formate_Nombre_Series(input, match.Index);
-            }
+                NombreSerie = CheckPatterIsMatch(input, Pattern2);
 
             if (String.IsNullOrWhiteSpace(NombreSerie))
-            {
-                match = Regex.Match(input, Pattern3, RegexOptions.CultureInvariant);
-                if (match.Success)
-                    NombreSerie = Formate_Nombre_Series(input, match.Index);
-            }
+                NombreSerie = CheckPatterIsMatch(input,Pattern3);
 
             if (String.IsNullOrWhiteSpace(NombreSerie))
-            {
-                match = Regex.Match(input, Pattern4, RegexOptions.CultureInvariant);
-                if (match.Success)
-                    NombreSerie = Formate_Nombre_Series(input, match.Index);
-            }
+                NombreSerie = CheckPatterIsMatch(input, Pattern4);
 
             if (String.IsNullOrWhiteSpace(NombreSerie))
-            {
-                match = Regex.Match(input, Pattern5, RegexOptions.CultureInvariant);
-                if (match.Success)
-                    NombreSerie = Formate_Nombre_Series(input, match.Index);
-            }
+                NombreSerie = CheckPatterIsMatch(input, Pattern5);
 
             if (String.IsNullOrWhiteSpace(NombreSerie))
-            {
-                match = Regex.Match(input, Pattern6, RegexOptions.CultureInvariant);
-                if (match.Success)
-                    NombreSerie = Formate_Nombre_Series(input, match.Index);
-            }
+                NombreSerie = CheckPatterIsMatch(input, Pattern6);
 
             if (String.IsNullOrWhiteSpace(NombreSerie))
-            {
-                match = Regex.Match(input, Pattern7, RegexOptions.CultureInvariant);
-                if (match.Success)
-                    NombreSerie = Formate_Nombre_Series(input, match.Index);
-            }
+                NombreSerie = CheckPatterIsMatch(input, Pattern7);
 
             if (String.IsNullOrWhiteSpace(NombreSerie))
-            {
-                match = Regex.Match(input, Pattern8, RegexOptions.CultureInvariant);
-                if (match.Success)
-                    NombreSerie = Formate_Nombre_Series(input, match.Index);
-            }
+                NombreSerie = CheckPatterIsMatch(input, Pattern8);
 
             if (String.IsNullOrWhiteSpace(NombreSerie))
-            {
-                match = Regex.Match(input, Pattern9, RegexOptions.CultureInvariant);
-                if (match.Success)
-                    NombreSerie = Formate_Nombre_Series(input, match.Index);
-            }
+                NombreSerie = CheckPatterIsMatch(input, Pattern9);
 
             if (String.IsNullOrWhiteSpace(NombreSerie))
-            {
-                match = Regex.Match(input, Pattern10, RegexOptions.CultureInvariant);
-                if (match.Success)
-                    NombreSerie = Formate_Nombre_Series(input, match.Index);
-            }
+                NombreSerie = CheckPatterIsMatch(input, Pattern10);
 
+            // EliminaGuionFinal (en caso de existir)
+            NombreSerie = EliminaGuionFinal(NombreSerie);
+
+            return NombreSerie;
+        }
+
+        private static string CheckPatterIsMatch(string input, string Pattern)
+        {
+            string NombreSerie = string.Empty;
+
+            // Probamos usando el patrón: S<Numero>E<Numero>
+            Match match = Regex.Match(input, Pattern, RegexOptions.CultureInvariant);
+            if (match.Success)
+                NombreSerie = Formate_Nombre_Series(input, match.Index);
 
             return NombreSerie;
         }
@@ -765,7 +1385,7 @@ namespace ParseTxTconElinks
         private static string Format_Decoded_eLink(string eLink_decoded)
         {
             string Protocolo = "ed2k://|file|";
-            eLink_decoded = eLink_decoded.Replace(Protocolo, string.Empty);
+            eLink_decoded = eLink_decoded.Replace(Protocolo, string.Empty).Replace("_", " ").Trim();
 
             char Separador = '|';
             int Pos_1er_separador = eLink_decoded.IndexOf(Separador);
@@ -778,12 +1398,17 @@ namespace ParseTxTconElinks
         private static string GetNombreSerieSiSeRepite(string input_actual, string input_siguiente, int LongitudTextoComunMinima)
         {
             string NombreSerie = string.Empty;
-            input_actual = Format_Decoded_eLink(input_actual).Replace("-", string.Empty).Trim();
-            input_siguiente = Format_Decoded_eLink(input_siguiente).Replace("-", string.Empty).Trim();
+
+            input_actual = Format_Decoded_eLink(input_actual).Replace(".", " ").Trim();
+            input_siguiente = Format_Decoded_eLink(input_siguiente).Replace(".", " ").Trim();
 
             // Eliminamos el texto entre parentesis o corchetes:
             input_actual = EliminaTextoEntreCorchetesParentesis(input_actual);
             input_siguiente = EliminaTextoEntreCorchetesParentesis(input_siguiente);
+
+            // EliminaGuionFinal (en caso de existir)
+            input_actual = EliminaGuionFinal(input_actual);
+            input_siguiente = EliminaGuionFinal(input_siguiente);
 
             int Longitud_TextoInicial_en_comun = 0;
 
@@ -798,7 +1423,60 @@ namespace ParseTxTconElinks
             if (Longitud_TextoInicial_en_comun >= LongitudTextoComunMinima)
             {
                 NombreSerie = input_actual.Substring(0, Longitud_TextoInicial_en_comun);
-                NombreSerie = NombreSerie.Replace("-", string.Empty).Trim();
+                // EliminaGuionFinal (en caso de existir)
+                NombreSerie = EliminaGuionFinal(NombreSerie).Trim();
+            }
+            
+            return NombreSerie;
+        }
+
+        private static string GetNombreSerieSiSeRepite(string[] TxT_Contenido, int index_inicial, float Porcentaje_variacion_maximo, int Umbral_LongitudTextoComunMinima)
+        {
+            string NombreSerie = string.Empty;
+
+            string input_inicial = Format_Decoded_eLink(HttpUtility.UrlDecode(TxT_Contenido[index_inicial]));
+            // Eliminamos el texto entre parentesis o corchetes:
+            input_inicial = EliminaTextoEntreCorchetesParentesis(input_inicial).Replace(".", " ").Trim();
+            // EliminaGuionFinal (en caso de existir)
+            input_inicial = EliminaGuionFinal(input_inicial);
+
+            
+            int Longitud_TextoInicial_en_comun_maxima = int.MaxValue;
+
+            for (int i = index_inicial + 1; i < TxT_Contenido.Length; i++)
+            {
+                string Nombre_serie_actual = Format_Decoded_eLink(HttpUtility.UrlDecode(TxT_Contenido[i])).Trim();
+                // Eliminamos el texto entre parentesis o corchetes:
+                Nombre_serie_actual = EliminaTextoEntreCorchetesParentesis(Nombre_serie_actual);
+                // EliminaGuionFinal (en caso de existir)
+                Nombre_serie_actual = EliminaGuionFinal(Nombre_serie_actual).Replace(".", " ").Trim();
+
+                int Longitud_TextoInicial_en_comun = 0;
+
+                while ((Longitud_TextoInicial_en_comun < input_inicial.Length)
+                    && (Longitud_TextoInicial_en_comun < Nombre_serie_actual.Length)
+                    && (input_inicial.ToLowerInvariant()[Longitud_TextoInicial_en_comun] == Nombre_serie_actual.ToLowerInvariant()[Longitud_TextoInicial_en_comun]))
+                {
+                    Longitud_TextoInicial_en_comun++;
+                }
+
+                if ((Longitud_TextoInicial_en_comun >= Umbral_LongitudTextoComunMinima)
+                    && (Longitud_TextoInicial_en_comun < Longitud_TextoInicial_en_comun_maxima))
+                {
+                    Longitud_TextoInicial_en_comun_maxima = Longitud_TextoInicial_en_comun;
+                }
+
+                if (Longitud_TextoInicial_en_comun < Umbral_LongitudTextoComunMinima)
+                    break;
+            }
+
+
+            if ((Longitud_TextoInicial_en_comun_maxima <= input_inicial.Length) &&
+                (Longitud_TextoInicial_en_comun_maxima >= Umbral_LongitudTextoComunMinima))
+            {
+                NombreSerie = input_inicial.Substring(0, Longitud_TextoInicial_en_comun_maxima);
+                // EliminaGuionFinal (en caso de existir)
+                NombreSerie = EliminaGuionFinal(NombreSerie).Trim();
             }
 
             return NombreSerie;
@@ -809,6 +1487,17 @@ namespace ParseTxTconElinks
             // Eliminamos el texto entre parentesis o corchetes:
             string regex = "(\\[.*\\])|(\".*\")|('.*')|(\\(.*\\))";
             return Regex.Replace(input, regex, string.Empty).Trim();
+        }
+
+        private static string EliminaGuionFinal(string input)
+        {
+            int index_last_guion = input.LastIndexOf('-');
+            // > 80% longitud del nombre
+            if (index_last_guion >= (int)(input.Length * 0.8))
+            {
+                input = input.Remove(index_last_guion).Trim();
+            }
+            return input.Trim();
         }
 
 
@@ -934,8 +1623,7 @@ namespace ParseTxTconElinks
         #endregion
         
         #endregion
-
-
+        
 
         #region UTILS
 
@@ -1020,11 +1708,41 @@ namespace ParseTxTconElinks
         }
 
         #endregion
-
         
 
-        
+        #region Descomprimir_Assets
 
+        private void Descomprimir_Assets(string DirHTML)
+        {
+            string Path_ZipFile = Path.Combine(DirHTML, "assets.zip");
+            string Path_Dir_Assets = Path.Combine(DirHTML, "assets");
+
+            // 1) Extraer Reource desde el ejecutable:
+            File.WriteAllBytes(Path_ZipFile, Resources.assets);
+
+            if (File.Exists(Path_ZipFile))
+            {
+                // 2) Crear directorio:
+                //Directory.CreateDirectory(Path_Dir_Assets);
+
+                //if (Directory.Exists(Path_Dir_Assets))
+                //{
+                    // 3) Decomprimirlo:
+                using (ZipStorer zip = ZipStorer.Open(Path_ZipFile, FileAccess.Read))
+                {
+                    List<ZipStorer.ZipFileEntry> zip_store = zip.ReadCentralDir();
+                    foreach (ZipStorer.ZipFileEntry entry in zip_store)
+                    {
+                        bool Extracted_OK = zip.ExtractFile(entry, Path.Combine(DirHTML, entry.FilenameInZip));
+                    }
+                }
+                
+                // 4) Borrar el zip:
+                File.Delete(Path_ZipFile);
+            }
+        }
+
+        #endregion
         
     }
 }

@@ -31,6 +31,9 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripDropDownButton_Opciones = new System.Windows.Forms.ToolStripDropDownButton();
+            this.toolStripMenuItem_HTML_TextoPlano = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem_HTML_New = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.textBox_TxT_Path = new System.Windows.Forms.TextBox();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
@@ -52,7 +55,8 @@
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabel1});
+            this.toolStripStatusLabel1,
+            this.toolStripDropDownButton_Opciones});
             this.statusStrip1.Location = new System.Drawing.Point(0, 237);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(478, 22);
@@ -61,9 +65,42 @@
             // 
             // toolStripStatusLabel1
             // 
+            this.toolStripStatusLabel1.Margin = new System.Windows.Forms.Padding(0, 3, 100, 2);
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(214, 17);
             this.toolStripStatusLabel1.Text = "Ningún fichero txt con elinks cargado...";
+            // 
+            // toolStripDropDownButton_Opciones
+            // 
+            this.toolStripDropDownButton_Opciones.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripDropDownButton_Opciones.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripDropDownButton_Opciones.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem_HTML_TextoPlano,
+            this.toolStripMenuItem_HTML_New});
+            this.toolStripDropDownButton_Opciones.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton_Opciones.Image")));
+            this.toolStripDropDownButton_Opciones.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripDropDownButton_Opciones.Name = "toolStripDropDownButton_Opciones";
+            this.toolStripDropDownButton_Opciones.Size = new System.Drawing.Size(70, 20);
+            this.toolStripDropDownButton_Opciones.Text = "Opciones";
+            this.toolStripDropDownButton_Opciones.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // toolStripMenuItem_HTML_TextoPlano
+            // 
+            this.toolStripMenuItem_HTML_TextoPlano.CheckOnClick = true;
+            this.toolStripMenuItem_HTML_TextoPlano.Name = "toolStripMenuItem_HTML_TextoPlano";
+            this.toolStripMenuItem_HTML_TextoPlano.Size = new System.Drawing.Size(172, 22);
+            this.toolStripMenuItem_HTML_TextoPlano.Text = "HTML Texto Plano";
+            this.toolStripMenuItem_HTML_TextoPlano.Click += new System.EventHandler(this.toolStripMenuItem_HTML_TextoPlano_Click);
+            // 
+            // toolStripMenuItem_HTML_New
+            // 
+            this.toolStripMenuItem_HTML_New.Checked = true;
+            this.toolStripMenuItem_HTML_New.CheckOnClick = true;
+            this.toolStripMenuItem_HTML_New.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.toolStripMenuItem_HTML_New.Name = "toolStripMenuItem_HTML_New";
+            this.toolStripMenuItem_HTML_New.Size = new System.Drawing.Size(172, 22);
+            this.toolStripMenuItem_HTML_New.Text = "HTML \"Bonito\"";
+            this.toolStripMenuItem_HTML_New.Click += new System.EventHandler(this.toolStripMenuItem_HTML_New_Click);
             // 
             // splitContainer1
             // 
@@ -83,7 +120,7 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
             this.splitContainer1.Size = new System.Drawing.Size(478, 237);
-            this.splitContainer1.SplitterDistance = 403;
+            this.splitContainer1.SplitterDistance = 409;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -97,7 +134,7 @@
             this.textBox_TxT_Path.Name = "textBox_TxT_Path";
             this.textBox_TxT_Path.ReadOnly = true;
             this.textBox_TxT_Path.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox_TxT_Path.Size = new System.Drawing.Size(403, 237);
+            this.textBox_TxT_Path.Size = new System.Drawing.Size(409, 237);
             this.textBox_TxT_Path.TabIndex = 0;
             this.textBox_TxT_Path.DragDrop += new System.Windows.Forms.DragEventHandler(this.textBox1_DragDrop);
             this.textBox_TxT_Path.DragOver += new System.Windows.Forms.DragEventHandler(this.textBox1_DragOver);
@@ -119,8 +156,8 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.button2);
-            this.splitContainer2.Size = new System.Drawing.Size(74, 237);
-            this.splitContainer2.SplitterDistance = 123;
+            this.splitContainer2.Size = new System.Drawing.Size(68, 237);
+            this.splitContainer2.SplitterDistance = 129;
             this.splitContainer2.SplitterWidth = 1;
             this.splitContainer2.TabIndex = 0;
             // 
@@ -129,7 +166,7 @@
             this.button1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.button1.Location = new System.Drawing.Point(0, 0);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(74, 123);
+            this.button1.Size = new System.Drawing.Size(68, 129);
             this.button1.TabIndex = 0;
             this.button1.Text = "Buscar txt con elinks";
             this.button1.UseVisualStyleBackColor = true;
@@ -142,7 +179,7 @@
             this.button2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.button2.Location = new System.Drawing.Point(0, 0);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(74, 113);
+            this.button2.Size = new System.Drawing.Size(68, 107);
             this.button2.TabIndex = 0;
             this.button2.Text = "Generar HTML";
             this.button2.UseVisualStyleBackColor = true;
@@ -205,6 +242,9 @@
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
+        private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButton_Opciones;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_HTML_TextoPlano;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_HTML_New;
     }
 }
 
