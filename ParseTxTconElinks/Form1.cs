@@ -520,15 +520,23 @@ namespace ParseTxTconElinks
                 }                
             }
 
-            string Empiezan_por_Digito = Make_Letter_Section("Numbers", Series_Empiezan_por_Digito);
-            Body += Empiezan_por_Digito;
+            if (Series_Empiezan_por_Digito.Count > 0)
+            {
+                string Empiezan_por_Digito = Make_Letter_Section("Numbers", Series_Empiezan_por_Digito);
+                Body += Empiezan_por_Digito;
+            }
 
-            string Otras_Series_Seccion = Make_Letter_Section(NombreRestoSeries, Series_No_Empieza_con_Letra_o_digito);
-            Body += Otras_Series_Seccion;
+            if (Series_No_Empieza_con_Letra_o_digito.Count > 0)
+            {
+                string Otras_Series_Seccion = Make_Letter_Section(NombreRestoSeries, Series_No_Empieza_con_Letra_o_digito);
+                Body += Otras_Series_Seccion;
+            }
 
-            string Series_No_Identificadas = Make_Letter_Section(NombreSerie_SinIdentificar, Series_Sin_Identificar);
-            Body += Series_No_Identificadas;
-
+            if (Series_Sin_Identificar.Count > 0)
+            {
+                string Series_No_Identificadas = Make_Letter_Section(NombreSerie_SinIdentificar, Series_Sin_Identificar);
+                Body += Series_No_Identificadas;
+            }
 
             if (!this.Generar_HTML_Texto_Plano)
                 Body += Body_End_Bootstrap();
@@ -635,6 +643,8 @@ namespace ParseTxTconElinks
                 //      <h3>Nombre de la Serie</h3>
                 //          <a href="eLink_RAW">eLink_decoded</a> [Lista eLinks]
 
+                string Texto_Inicial = (string)NombreSeccion.Clone();
+
                 if ((NombreSeccion.Length == 1) && (char.IsLetter(NombreSeccion[0])))
                     NombreSeccion = "Letra " + NombreSeccion.ToUpperInvariant();
                 else if ((NombreSeccion.Length == 1) && (char.IsNumber(NombreSeccion[0])))
@@ -646,7 +656,17 @@ namespace ParseTxTconElinks
                 writer.Write(NombreSeccion);
                 writer.RenderEndTag(); // </h1>
 
-                
+                writer.RenderBeginTag(HtmlTextWriterTag.P);
+
+                // Ponemos el Nombre de todas las series que empiezan por esa letra:
+                string HTML_NombreSeries_Misma_Letra_Inicial = Genera_Lista_Series_Mismo_Caracter_Inicial(Texto_Inicial, Series_Mismo_Conjunto);
+                writer.Write(HTML_NombreSeries_Misma_Letra_Inicial);
+
+                writer.RenderEndTag(); // </p>
+
+                // Salto de Línea:
+                writer.RenderBeginTag(HtmlTextWriterTag.Br);
+                writer.RenderEndTag(); // </br>
 
                 foreach (Links_misma_Serie Serie in Series_Mismo_Conjunto)
                 {
@@ -704,6 +724,9 @@ namespace ParseTxTconElinks
 
                 writer.RenderEndTag(); // </div> [La letra inicial]
                 writer.WriteLine(); // Salto de Línea
+                
+                writer.RenderBeginTag(HtmlTextWriterTag.Br);
+                writer.RenderEndTag(); // </br>
             }
             // Return the result.
             return stringWriter.ToString();
@@ -1181,6 +1204,41 @@ namespace ParseTxTconElinks
                         writer.RenderEndTag(); // </a>
 
                         writer.RenderEndTag(); // </li>
+                    }
+                }
+            }
+
+            // Return the result.
+            return stringWriter.ToString();
+        }
+
+        private string Genera_Lista_Series_Mismo_Caracter_Inicial(string Texto_Inicial, List<Links_misma_Serie> Series)
+        {
+            //<a href="#">[Conjunto 1]Nombre Serie</a>
+            //<a href="#">[Conjunto 1]Nombre Serie</a>
+            //<a href="#">[Conjunto 1]Nombre Serie</a>
+            // Separados solo por 1 espacio!!!
+
+            StringWriter stringWriter = new StringWriter();
+
+            // Put HtmlTextWriter in using block because it needs to call Dispose.
+            using (HtmlTextWriter writer = new HtmlTextWriter(stringWriter))
+            {
+                foreach (Links_misma_Serie Serie in Series)
+                {
+                    string SeriesName = Serie.NombreSerie;
+                    string href_SeriesName = "#" + Serie.NombreSerie.ToUpperInvariant();
+
+                    if (((Texto_Inicial == "Numbers") && (char.IsDigit(SeriesName[0])))
+                        || ((Texto_Inicial.Length == 1) && (char.IsLetter(SeriesName[0])) && (SeriesName.StartsWith(Texto_Inicial, StringComparison.InvariantCultureIgnoreCase)))
+                        || ((SeriesName == NombreSerie_SinIdentificar) && (Texto_Inicial == NombreSerie_SinIdentificar))
+                        || ((Texto_Inicial.Length > 1) && (!char.IsLetterOrDigit(SeriesName[0]))))
+                    {                        
+                        writer.AddAttribute(HtmlTextWriterAttribute.Href, href_SeriesName);
+                        writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                        writer.Write(SeriesName);
+                        writer.RenderEndTag(); // </a>
+                        writer.Write(" || ");
                     }
                 }
             }
