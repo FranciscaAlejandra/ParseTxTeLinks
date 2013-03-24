@@ -485,9 +485,11 @@ namespace ParseTxTconElinks
             // ------------------------------------------------
 
             if (!this.Generar_HTML_Texto_Plano)
+            {
                 Body += @"<div class=""span9"" id=""listado-series"">";
-
-            Body += Generate_HTML_Menu(LetrasIniciales, NombreRestoSeries);
+                Body += Generate_HTML_Menu(LetrasIniciales, NombreRestoSeries);
+            }
+            
 
             List<Links_misma_Serie> Series_Empiezan_por_Digito = new List<Links_misma_Serie>();
 

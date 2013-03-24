@@ -9,7 +9,7 @@ y luego trata de agrupar dichos enlaces basandose en los nombres comunes entre e
 Finalmente, genera un fichero HTML (una página web) con un índice a cada grupo de enlaces (letra inicial)
 
 * Captura de Pantalla del Programa:
-(Texto Plano)http://i.imgur.com/ISOGm1Z.png?1 || (Bootstrap) http://i.imgur.com/CCObufL.png?1
+(Texto Plano) http://i.imgur.com/ISOGm1Z.png?1 || (Bootstrap) http://i.imgur.com/CCObufL.png?1
 
 
 * NOTA --
