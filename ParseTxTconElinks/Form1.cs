@@ -852,30 +852,36 @@ namespace ParseTxTconElinks
                 // ----------------
                 //      NÚMEROS
                 // ----------------
-                writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-submenu");
-                writer.RenderBeginTag(HtmlTextWriterTag.Li);
-                writer.Indent++;
+
+                string HTML_Numeros = Genera_Lista_items_ul_NombreSeries("Numbers", Series_Empieza_con_Letra_o_Digito);
+
+                if (!String.IsNullOrWhiteSpace(HTML_Numeros))
+                {
+                    writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-submenu");
+                    writer.RenderBeginTag(HtmlTextWriterTag.Li);
+                    writer.Indent++;
 
 
-                string URL_Numbers = "#Numbers";
-                writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Numbers);
-                writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
-                writer.Write("[0-9]");
-                writer.RenderEndTag(); // </a> 
+                    string URL_Numbers = "#Numbers";
+                    writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Numbers);
+                    writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                    writer.Write("[0-9]");
+                    writer.RenderEndTag(); // </a> 
 
 
-                writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-menu");
-                writer.RenderBeginTag(HtmlTextWriterTag.Ul);
-                writer.Indent++;
+                    writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-menu");
+                    writer.RenderBeginTag(HtmlTextWriterTag.Ul);
+                    writer.Indent++;
 
-                writer.Write(Genera_Lista_items_ul_NombreSeries("Numbers", Series_Empieza_con_Letra_o_Digito));
+                    writer.Write(HTML_Numeros);
 
-                writer.Indent--;
-                writer.RenderEndTag(); // </ul>
+                    writer.Indent--;
+                    writer.RenderEndTag(); // </ul>
 
 
-                writer.Indent--;
-                writer.RenderEndTag(); // </li>
+                    writer.Indent--;
+                    writer.RenderEndTag(); // </li>
+                }
 
 
 
@@ -883,29 +889,35 @@ namespace ParseTxTconElinks
                 // ----------------
                 //      OTRAS
                 // ----------------
-                writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-submenu");
-                writer.RenderBeginTag(HtmlTextWriterTag.Li);
-                writer.Indent++;
-                
-                string URL_Otras = "#" + NombreRestoSeries;
-                writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Otras);
-                writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
-                writer.Write("Otras");
-                writer.RenderEndTag(); // </a> 
+
+                string HTML_Otras = Genera_Lista_items_ul_NombreSeries(NombreRestoSeries, Series_No_Empieza_con_Letra_o_digito);
+
+                if (!String.IsNullOrWhiteSpace(HTML_Otras))
+                {
+                    writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-submenu");
+                    writer.RenderBeginTag(HtmlTextWriterTag.Li);
+                    writer.Indent++;
+
+                    string URL_Otras = "#" + NombreRestoSeries;
+                    writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Otras);
+                    writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                    writer.Write("Otras");
+                    writer.RenderEndTag(); // </a> 
 
 
-                writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-menu");
-                writer.RenderBeginTag(HtmlTextWriterTag.Ul);
-                writer.Indent++;
+                    writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-menu");
+                    writer.RenderBeginTag(HtmlTextWriterTag.Ul);
+                    writer.Indent++;
 
-                writer.Write(Genera_Lista_items_ul_NombreSeries(NombreRestoSeries, Series_No_Empieza_con_Letra_o_digito));
+                    writer.Write(HTML_Otras);
 
-                writer.Indent--;
-                writer.RenderEndTag(); // </ul>
+                    writer.Indent--;
+                    writer.RenderEndTag(); // </ul>
 
 
-                writer.Indent--;
-                writer.RenderEndTag(); // </li>
+                    writer.Indent--;
+                    writer.RenderEndTag(); // </li>
+                }
 
 
 
@@ -913,6 +925,7 @@ namespace ParseTxTconElinks
                 // --------------------------
                 //      SIN IDENTIFICAR
                 // --------------------------
+
                 writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-submenu");
                 writer.RenderBeginTag(HtmlTextWriterTag.Li);
                 writer.Indent++;
@@ -1035,63 +1048,75 @@ namespace ParseTxTconElinks
                 // ----------------
                 //      NÚMEROS
                 // ----------------
-                writer.RenderBeginTag(HtmlTextWriterTag.Li);
-                writer.Indent++;
 
-                string URL_Numbers = "#Numbers";
-                writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Numbers);
-                writer.AddAttribute("data-target", "#demo" + counter.ToString());
-                
-                writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
-                writer.Write("[0-9]");
-                writer.RenderEndTag(); // </a>
+                string HTML_Numeros = Genera_Lista_items_ul_NombreSeries("Numbers", Series_Empieza_con_Letra_o_Digito);
 
-                writer.AddAttribute(HtmlTextWriterAttribute.Id, "demo" + counter.ToString());
-                writer.AddAttribute(HtmlTextWriterAttribute.Class, "collapse");
-                writer.AddAttribute(HtmlTextWriterAttribute.Style, "height: 0px;");
-                writer.RenderBeginTag(HtmlTextWriterTag.Ul);
-                writer.Indent++;
+                if (!String.IsNullOrWhiteSpace(HTML_Numeros))
+                {
+                    writer.RenderBeginTag(HtmlTextWriterTag.Li);
+                    writer.Indent++;
 
-                writer.Write(Genera_Lista_items_ul_NombreSeries("Numbers", Series_Empieza_con_Letra_o_Digito));
+                    string URL_Numbers = "#Numbers";
+                    writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Numbers);
+                    writer.AddAttribute("data-target", "#demo" + counter.ToString());
 
-                writer.Indent--;
-                writer.RenderEndTag(); // </ul>
+                    writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                    writer.Write("[0-9]");
+                    writer.RenderEndTag(); // </a>
+
+                    writer.AddAttribute(HtmlTextWriterAttribute.Id, "demo" + counter.ToString());
+                    writer.AddAttribute(HtmlTextWriterAttribute.Class, "collapse");
+                    writer.AddAttribute(HtmlTextWriterAttribute.Style, "height: 0px;");
+                    writer.RenderBeginTag(HtmlTextWriterTag.Ul);
+                    writer.Indent++;
+
+                    writer.Write(HTML_Numeros);
+
+                    writer.Indent--;
+                    writer.RenderEndTag(); // </ul>
 
 
-                writer.Indent--;
-                writer.RenderEndTag(); // </li>
+                    writer.Indent--;
+                    writer.RenderEndTag(); // </li>
 
-                counter++;
+                    counter++;
+                }
 
 
 
                 // ----------------
                 //      OTRAS
                 // ----------------
-                writer.RenderBeginTag(HtmlTextWriterTag.Li);
-                writer.Indent++;
 
-                string URL_Otras = "#" + NombreRestoSeries;
-                writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Otras);
-                writer.AddAttribute("data-target", "#demo" + counter.ToString());
+                string HTML_Otras = Genera_Lista_items_ul_NombreSeries(NombreRestoSeries, Series_No_Empieza_con_Letra_o_digito);
 
-                writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
-                writer.Write("Otras");
-                writer.RenderEndTag(); // </a>
+                if (!String.IsNullOrWhiteSpace(HTML_Otras))
+                {
+                    writer.RenderBeginTag(HtmlTextWriterTag.Li);
+                    writer.Indent++;
 
-                writer.AddAttribute(HtmlTextWriterAttribute.Id, "demo" + counter.ToString());
-                writer.AddAttribute(HtmlTextWriterAttribute.Class, "collapse");
-                writer.AddAttribute(HtmlTextWriterAttribute.Style, "height: 0px;");
-                writer.RenderBeginTag(HtmlTextWriterTag.Ul);
-                writer.Indent++;
+                    string URL_Otras = "#" + NombreRestoSeries;
+                    writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Otras);
+                    writer.AddAttribute("data-target", "#demo" + counter.ToString());
 
-                writer.Write(Genera_Lista_items_ul_NombreSeries(NombreRestoSeries, Series_No_Empieza_con_Letra_o_digito));
+                    writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                    writer.Write("Otras");
+                    writer.RenderEndTag(); // </a>
+
+                    writer.AddAttribute(HtmlTextWriterAttribute.Id, "demo" + counter.ToString());
+                    writer.AddAttribute(HtmlTextWriterAttribute.Class, "collapse");
+                    writer.AddAttribute(HtmlTextWriterAttribute.Style, "height: 0px;");
+                    writer.RenderBeginTag(HtmlTextWriterTag.Ul);
+                    writer.Indent++;
+
+                    writer.Write(HTML_Otras);
 
 
-                writer.Indent--;
-                writer.RenderEndTag(); // </li>
+                    writer.Indent--;
+                    writer.RenderEndTag(); // </li>
 
-                counter++;
+                    counter++;
+                }
 
 
 
