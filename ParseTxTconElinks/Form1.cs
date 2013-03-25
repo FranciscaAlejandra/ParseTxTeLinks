@@ -656,13 +656,16 @@ namespace ParseTxTconElinks
                 writer.Write(NombreSeccion);
                 writer.RenderEndTag(); // </h1>
 
-                writer.RenderBeginTag(HtmlTextWriterTag.P);
-
                 // Ponemos el Nombre de todas las series que empiezan por esa letra:
-                string HTML_NombreSeries_Misma_Letra_Inicial = Genera_Lista_Series_Mismo_Caracter_Inicial(Texto_Inicial, Series_Mismo_Conjunto);
-                writer.Write(HTML_NombreSeries_Misma_Letra_Inicial);
+                if (NombreSeccion != NombreSerie_SinIdentificar)
+                {
+                    writer.RenderBeginTag(HtmlTextWriterTag.P);
 
-                writer.RenderEndTag(); // </p>
+                    string HTML_NombreSeries_Misma_Letra_Inicial = Genera_Lista_Series_Mismo_Caracter_Inicial(Texto_Inicial, Series_Mismo_Conjunto);
+                    writer.Write(HTML_NombreSeries_Misma_Letra_Inicial);
+
+                    writer.RenderEndTag(); // </p>
+                }
 
                 // Salto de Línea:
                 writer.RenderBeginTag(HtmlTextWriterTag.Br);
@@ -1224,8 +1227,9 @@ namespace ParseTxTconElinks
             // Put HtmlTextWriter in using block because it needs to call Dispose.
             using (HtmlTextWriter writer = new HtmlTextWriter(stringWriter))
             {
-                foreach (Links_misma_Serie Serie in Series)
+                for (int i = 0; i < Series.Count; i++ )
                 {
+                    Links_misma_Serie Serie = Series[i];
                     string SeriesName = Serie.NombreSerie;
                     string href_SeriesName = "#" + Serie.NombreSerie.ToUpperInvariant();
 
@@ -1233,12 +1237,15 @@ namespace ParseTxTconElinks
                         || ((Texto_Inicial.Length == 1) && (char.IsLetter(SeriesName[0])) && (SeriesName.StartsWith(Texto_Inicial, StringComparison.InvariantCultureIgnoreCase)))
                         || ((SeriesName == NombreSerie_SinIdentificar) && (Texto_Inicial == NombreSerie_SinIdentificar))
                         || ((Texto_Inicial.Length > 1) && (!char.IsLetterOrDigit(SeriesName[0]))))
-                    {                        
+                    {
                         writer.AddAttribute(HtmlTextWriterAttribute.Href, href_SeriesName);
                         writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
                         writer.Write(SeriesName);
                         writer.RenderEndTag(); // </a>
-                        writer.Write(" || ");
+
+                        // Separador
+                        if (i < Series.Count - 1)
+                            writer.Write(" || ");
                     }
                 }
             }
