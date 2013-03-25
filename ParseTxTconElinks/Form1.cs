@@ -377,9 +377,10 @@ namespace ParseTxTconElinks
                                     <html>
                                     <title>{0}</title>
                                     <meta name=""description"" content={1}>
-                                    <meta name=""author"" content={2}>
-                                    </head>
-                                    ", title, description, author);
+                                    <meta name=""author"" content={2}>                                    
+                                    ", title, description, author)
+                                     + String_Script_Show_RAW_eLinks()
+                                     + "</head>";
         }
 
         private string Generate_HTML_Head_Bootstrap(string title, string description, string author)
@@ -435,9 +436,41 @@ namespace ParseTxTconElinks
                                 <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
                                 <!--[if lt IE 9]>
                                     <script src=""assets/html5shiv.js""></script>
-                                <![endif]-->
-                            </head>";
+                                <![endif]-->"
+                                + String_Script_Show_RAW_eLinks()
+                                + "</head>";
             return Head;
+        }
+
+        private static string String_Script_Show_RAW_eLinks()
+        {
+            return @"
+                    <script type=""text/javascript"">
+
+					function Show_eLinks(var_Div_ID)
+					{
+						var div_serie = document.getElementById(var_Div_ID);
+						var div_hrefs = div_serie.getElementsByTagName('a');
+						var div_span = div_serie.getElementsByTagName('span');
+									
+						if (div_span[0].innerHTML == '')
+						{																		
+							var eLinks = '';
+							var i = 0;
+							for (i = 0; i < div_hrefs.length; i++)
+							{
+								eLinks += div_hrefs[i].href + ""<br />"";
+							}
+							div_span[0].innerHTML += eLinks + ""<br />"";
+						}
+						else
+						{
+							div_span[0].innerHTML = '';
+						}
+					}
+
+					</script>
+                    ";
         }
 
 
@@ -684,7 +717,25 @@ namespace ParseTxTconElinks
                                         
                     writer.RenderBeginTag(HtmlTextWriterTag.H3);
                     writer.Write(Serie.NombreSerie.ToUpperInvariant());
+
+                    // Boton muestra los eLinks en RAW (para copiarlos facilmente)
+                    // <button class="btn btn-info" onclick="Show_eLinks('NombreSerie')">Mostrar eLinks</button>
+                    writer.AddAttribute(HtmlTextWriterAttribute.Class, "btn btn-info");                    
+                    writer.AddAttribute(HtmlTextWriterAttribute.Onclick, "Show_eLinks('" + Serie.NombreSerie.ToUpperInvariant() + "')");
+                    writer.AddAttribute(HtmlTextWriterAttribute.Style, "margin-left: 20px");
+                    writer.RenderBeginTag(HtmlTextWriterTag.Button);
+                    writer.Write("Mostrar eLinks");
+                    writer.RenderEndTag(); // </button>
+
                     writer.RenderEndTag(); // </h3>
+
+
+                    // El span para mostrar los eLinks:
+                    // <span id ="eLinks"></span>
+                    writer.AddAttribute(HtmlTextWriterAttribute.Id, "eLinks");
+                    writer.RenderBeginTag(HtmlTextWriterTag.Span);
+                    writer.RenderEndTag(); // </span>
+
 
                     if (!String.IsNullOrWhiteSpace(Serie.IMDB_Link))
                         writer.RenderEndTag(); // </a> 
