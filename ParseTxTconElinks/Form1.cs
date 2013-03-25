@@ -841,6 +841,10 @@ namespace ParseTxTconElinks
                 writer.Indent--;
 
                 writer.RenderEndTag(); // </h2>
+
+                // Salto de Línea
+                writer.RenderBeginTag(HtmlTextWriterTag.Br); // <br>
+                writer.RenderEndTag(); // </br>
             }
             // Return the result.
             return stringWriter.ToString();
