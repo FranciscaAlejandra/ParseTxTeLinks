@@ -539,7 +539,7 @@ namespace ParseTxTconElinks
                     {
                         Series_Empiezan_por_Digito.Add(Serie);
                     }
-                    else if ((Serie.NombreSerie.StartsWith(LetraInicial.ToString()))
+                    else if ((Serie.NombreSerie.ToLowerInvariant().StartsWith(LetraInicial.ToString().ToLowerInvariant()))
                         && (Serie.NombreSerie != NombreSerie_SinIdentificar))
                     {
                         Temp_Series_Empiezan_por_esa_Letra.Add(Serie);
@@ -611,7 +611,7 @@ namespace ParseTxTconElinks
             return @"
                                 </li>
 				                <li class=""divider-vertical""></li>	
-				                <li><button class=""btn"" id=""boton-mostrar-sidebar"" onclick=""if ($('#menu-series-lateral').is(':visible')){$('#menu-series-lateral').hide('slow'); $('#menu-series-lateral').attr('class', 'span1'); $('#listado-series').attr('class', 'span11')} else {$('#listado-series').attr('class', 'span9'); $('#menu-series-lateral').attr('class', 'span3'); $('#menu-series-lateral').show('slow')}"">Mostrar/Ocultar Menu Lateral</button></li>					
+				                <li><button class=""btn"" id=""boton-mostrar-sidebar"" onclick=""if ($('#menu-series-lateral').is(':visible')){$('#menu-series-lateral').hide('slow'); $('#menu-series-lateral').attr('class', 'span1'); $('#listado-series').attr('class', 'span11')} else {$('#listado-series').attr('class', 'span9'); $('#menu-series-lateral').attr('class', 'span3'); $('#menu-series-lateral').show('slow')}"">Mostrar Menu Lateral</button></li>					
                             </ul>
                             </div><!--/.nav-collapse -->
                         </div>
@@ -718,14 +718,18 @@ namespace ParseTxTconElinks
                     writer.RenderBeginTag(HtmlTextWriterTag.H3);
                     writer.Write(Serie.NombreSerie.ToUpperInvariant());
 
-                    // Boton muestra los eLinks en RAW (para copiarlos facilmente)
-                    // <button class="btn btn-info" onclick="Show_eLinks('NombreSerie')">Mostrar eLinks</button>
-                    writer.AddAttribute(HtmlTextWriterAttribute.Class, "btn btn-info");                    
-                    writer.AddAttribute(HtmlTextWriterAttribute.Onclick, "Show_eLinks('" + Serie.NombreSerie.ToUpperInvariant() + "')");
-                    writer.AddAttribute(HtmlTextWriterAttribute.Style, "margin-left: 20px");
-                    writer.RenderBeginTag(HtmlTextWriterTag.Button);
-                    writer.Write("Mostrar eLinks");
-                    writer.RenderEndTag(); // </button>
+
+                    if (NombreSeccion != NombreSerie_SinIdentificar)
+                    {
+                        // Boton muestra los eLinks en RAW (para copiarlos facilmente)
+                        // <button class="btn btn-info" onclick="Show_eLinks('NombreSerie')">Mostrar eLinks</button>
+                        writer.AddAttribute(HtmlTextWriterAttribute.Class, "btn btn-info");
+                        writer.AddAttribute(HtmlTextWriterAttribute.Onclick, "Show_eLinks('" + Serie.NombreSerie.ToUpperInvariant() + "')");
+                        writer.AddAttribute(HtmlTextWriterAttribute.Style, "margin-left: 20px");
+                        writer.RenderBeginTag(HtmlTextWriterTag.Button);
+                        writer.Write("Mostrar eLinks");
+                        writer.RenderEndTag(); // </button>
+                    }
 
                     writer.RenderEndTag(); // </h3>
 
@@ -1332,6 +1336,7 @@ namespace ParseTxTconElinks
                     // 1) URL Decode para tener el nombre bien
                     string eLink_RAW = TxT_Contenido[i];
                     string eLink_decoded = HttpUtility.UrlDecode(eLink_RAW);
+
 
                     // 2) Nombre de la serie:
                     eLink_decoded = eLink_decoded.Replace("_", " ");
