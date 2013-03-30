@@ -54,6 +54,7 @@ namespace ParseTxTconElinks
         string HTML_Final { get; set; }
         string HTML_Final_Bootstrap { get; set; }
         bool Generar_HTML_Texto_Plano = false;
+        bool Procesar_TxTs_Por_Separado = false;
         static string NombreSerie_SinIdentificar = "Sin Identificar";
 
         StringCollection Input_TxTfilePaths { get; set; }
@@ -79,6 +80,7 @@ namespace ParseTxTconElinks
 
             toolStripMenuItem_HTML_TextoPlano.Checked = Generar_HTML_Texto_Plano;
             toolStripMenuItem_HTML_New.Checked = !Generar_HTML_Texto_Plano;
+            toolStripMenuItem_ProcesaTxTporSeparado.Checked = Procesar_TxTs_Por_Separado;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -102,6 +104,12 @@ namespace ParseTxTconElinks
             // Get file name.
             string Filename = saveFileDialog1.FileName;
 
+            // Save File:
+            SaveHTML_File(Filename);
+        }
+
+        private void SaveHTML_File(string Filename)
+        {
             // Save File:
             File.WriteAllText(Filename, this.HTML_Final, UTF8Encoding.UTF8);
 
@@ -132,6 +140,11 @@ namespace ParseTxTconElinks
                 toolStripMenuItem_HTML_New.Checked = true;
 
             Generar_HTML_Texto_Plano = toolStripMenuItem_HTML_TextoPlano.Checked;
+        }
+
+        private void toolStripMenuItem_ProcesaTxTporSeparado_Click(object sender, EventArgs e)
+        {
+            Procesar_TxTs_Por_Separado = toolStripMenuItem_ProcesaTxTporSeparado.Checked;
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -174,68 +187,34 @@ namespace ParseTxTconElinks
                     }
 
 
-                    // Fusionamos todos los objetos "Links_misma_Serie" y los ordenamos por orden alfabético
-                    List<Links_misma_Serie> Mezcla_Resultados = Mezcla_Resultados_Series(Array_TxT_Procesados);
-
-
-                    // Sin mezclar resultados, pero ordenandolos de forma alfabética:
                     Links_misma_Serie_sort_by_Name Sort_Method = new Links_misma_Serie_sort_by_Name();
-                    for (int i = 0; i < Array_TxT_Procesados.Length; i++)
-                        Array_TxT_Procesados[i].Lista_Series.Sort(Sort_Method);
 
-
-                    // Separar por Letra Inicial (para el Menú y las agrupaciones)
-                    List<Links_misma_Serie> Series_Empieza_con_Letra_o_Digito, Series_No_Empieza_con_Letra_o_Digito, Series_Sin_Identificar;
-                    List<char> LetrasIniciales = Get_Initial_Letters(Mezcla_Resultados,
-                                                                     out Series_Empieza_con_Letra_o_Digito,
-                                                                     out Series_No_Empieza_con_Letra_o_Digito,
-                                                                     out Series_Sin_Identificar);
-                    Series_Empieza_con_Letra_o_Digito.Sort(Sort_Method); 
-                    Series_No_Empieza_con_Letra_o_Digito.Sort(Sort_Method);
-                    Series_Sin_Identificar.Sort(Sort_Method); 
-                    
-
-                    // Generamos el HTML final:
-                    // ------------------------
-                    // 1) El HTML Head:
-                    string Title = "Recopilación de eLinks";
-                    string author = "Kerensky";
-                    string Head = string.Empty;
-                    if (Generar_HTML_Texto_Plano)
-                        Head = Generate_HTML_Head_TextoPlano(Title, Title, author);
-                    else
-                        Head = Generate_HTML_Head_Bootstrap(Title, Title, author);
-               
-                    // 2) El Body:
-                    string NombreRestoSeries = "Otras";
-                    string Body = Generate_HTML_Body(LetrasIniciales, NombreRestoSeries,
-                                                     Series_Empieza_con_Letra_o_Digito,
-                                                     Series_No_Empieza_con_Letra_o_Digito,
-                                                     Series_Sin_Identificar);
-                    
-                    // 3) HTML Final:
-                    this.HTML_Final = Head + Body;
-
-
-                    // Le preguntamos al user que donde lo quiere guardar
-                    // --------------------------------------------------
-                    // (empezar misma carpeta que el 1º de los TxT's)
-                    if (!String.IsNullOrWhiteSpace(this.HTML_Final))
+                    if (this.Procesar_TxTs_Por_Separado)
                     {
-                        if (File.Exists(Input_TxTfilePaths[0]))
-                            saveFileDialog1.InitialDirectory = Path.GetDirectoryName(Input_TxTfilePaths[0]);
-                        else
-                            saveFileDialog1.InitialDirectory = Application.StartupPath;
+                        // Procesa los TxT's por Separado
+                        // ------------------------------
 
-                        if (Input_TxTfilePaths.Count == 1)
-                            saveFileDialog1.FileName = Path.GetFileNameWithoutExtension(Input_TxTfilePaths[0]);
+                        // Sin mezclar resultados, pero ordenandolos de forma alfabética:
+                        for (int i = 0; i < Array_TxT_Procesados.Length; i++)
+                            Array_TxT_Procesados[i].Lista_Series.Sort(Sort_Method);
 
-                        // Pregunta al user dónde guardar el HTML
-                        saveFileDialog1.ShowDialog(this);
+                        for (int i=0; i < Array_TxT_Procesados.Length; i++)
+                        {
+                            List<Links_misma_Serie> TxT_Procesado = Array_TxT_Procesados[i].Lista_Series;
+
+                            Convierte_TxT_Procesado_en_HTML(TxT_Procesado, Sort_Method, true, i);
+                        }
                     }
                     else
-                        MessageBox.Show("Fallo al generar el HTML", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    {
+                        // Fusiona los enlaces de todos los TxT's
+                        // --------------------------------------
 
+                        // Fusionamos todos los objetos "Links_misma_Serie" y los ordenamos por orden alfabético
+                        List<Links_misma_Serie> Mezcla_Resultados = Mezcla_Resultados_Series(Array_TxT_Procesados);
+
+                        Convierte_TxT_Procesado_en_HTML(Mezcla_Resultados, Sort_Method, false, 0);
+                    }
                 }
                 catch (Exception Excepcion)
                 {
@@ -251,6 +230,74 @@ namespace ParseTxTconElinks
                 MessageBox.Show("No se ha seleccionado ningún txt con elinks", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
+        private void Convierte_TxT_Procesado_en_HTML(List<Links_misma_Serie> TxT_Procesado,
+                                                     Links_misma_Serie_sort_by_Name Sort_Method,
+                                                     bool NoPreguntarPathSaveFile, int Index_Original_TxT_FileName)
+        {
+            // Separar por Letra Inicial (para el Menú y las agrupaciones)
+            List<Links_misma_Serie> Series_Empieza_con_Letra_o_Digito, Series_No_Empieza_con_Letra_o_Digito, Series_Sin_Identificar;
+            List<char> LetrasIniciales = Get_Initial_Letters(TxT_Procesado,
+                                                             out Series_Empieza_con_Letra_o_Digito,
+                                                             out Series_No_Empieza_con_Letra_o_Digito,
+                                                             out Series_Sin_Identificar);
+            Series_Empieza_con_Letra_o_Digito.Sort(Sort_Method);
+            Series_No_Empieza_con_Letra_o_Digito.Sort(Sort_Method);
+            Series_Sin_Identificar.Sort(Sort_Method);
+
+
+            // Generamos el HTML final:
+            // ------------------------
+            // 1) El HTML Head:
+            string Title = "Recopilación de eLinks";
+            string author = "Kerensky";
+            string Head = string.Empty;
+            if (Generar_HTML_Texto_Plano)
+                Head = Generate_HTML_Head_TextoPlano(Title, Title, author);
+            else
+                Head = Generate_HTML_Head_Bootstrap(Title, Title, author);
+
+            // 2) El Body:
+            string NombreRestoSeries = "Otras";
+            string Body = Generate_HTML_Body(LetrasIniciales, NombreRestoSeries,
+                                             Series_Empieza_con_Letra_o_Digito,
+                                             Series_No_Empieza_con_Letra_o_Digito,
+                                             Series_Sin_Identificar);
+
+            // 3) HTML Final:
+            this.HTML_Final = Head + Body;
+
+
+            // Le preguntamos al user que donde lo quiere guardar
+            // --------------------------------------------------
+            // (empezar misma carpeta que el 1º de los TxT's)
+            if (!String.IsNullOrWhiteSpace(this.HTML_Final))
+            {
+                string InitialDirectory_SaveHTML = Application.StartupPath;
+                if (File.Exists(Input_TxTfilePaths[Index_Original_TxT_FileName]))
+                    InitialDirectory_SaveHTML = Path.GetDirectoryName(Input_TxTfilePaths[Index_Original_TxT_FileName]);
+                string FileName_SaveHTML = Path.GetFileNameWithoutExtension(Input_TxTfilePaths[Index_Original_TxT_FileName]);
+
+                if (NoPreguntarPathSaveFile)
+                {
+                    string Path_HTML_Final = Path.Combine(InitialDirectory_SaveHTML, FileName_SaveHTML + ".html");
+
+                    // Save File:
+                    SaveHTML_File(Path_HTML_Final);
+                }
+                else
+                {
+                    saveFileDialog1.InitialDirectory = InitialDirectory_SaveHTML;
+
+                    if (Input_TxTfilePaths.Count == 1)
+                        saveFileDialog1.FileName = FileName_SaveHTML;
+
+                    // Pregunta al user dónde guardar el HTML
+                    saveFileDialog1.ShowDialog(this);
+                }
+            }
+            else
+                MessageBox.Show("Fallo al generar el HTML", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
 
 
 
@@ -487,9 +534,17 @@ namespace ParseTxTconElinks
 
             // 1) El HTML Header (Menu Letras iniciales):
             // ----------------------------------------
+            bool Add_Letter_Menu_Resto_Series = false;
+            bool Add_Letter_Menu_Series_Sin_Identificar = false;
+            if (Series_No_Empieza_con_Letra_o_digito.Count > 0)
+                Add_Letter_Menu_Resto_Series = true;
+            if (Series_Sin_Identificar.Count > 0)
+                Add_Letter_Menu_Series_Sin_Identificar = true;
+
             string Header = string.Empty;
             if (this.Generar_HTML_Texto_Plano)
-                Header = Generate_HTML_Menu(LetrasIniciales, NombreRestoSeries);
+                Header = Generate_HTML_Menu(LetrasIniciales, NombreRestoSeries,
+                                            Add_Letter_Menu_Resto_Series, Add_Letter_Menu_Series_Sin_Identificar);
             else
             {
                 string Header_Start = Header_Bootstrap_Start();
@@ -520,7 +575,8 @@ namespace ParseTxTconElinks
             if (!this.Generar_HTML_Texto_Plano)
             {
                 Body += @"<div class=""span9"" id=""listado-series"">";
-                Body += Generate_HTML_Menu(LetrasIniciales, NombreRestoSeries);
+                Body += Generate_HTML_Menu(LetrasIniciales, NombreRestoSeries,
+                                           Add_Letter_Menu_Resto_Series, Add_Letter_Menu_Series_Sin_Identificar);
             }
             
 
@@ -666,7 +722,7 @@ namespace ParseTxTconElinks
         private string Make_Letter_Section(string NombreSeccion, List<Links_misma_Serie> Series_Mismo_Conjunto)
         {
             StringWriter stringWriter = new StringWriter();
-
+            
             // Put HtmlTextWriter in using block because it needs to call Dispose.
             using (HtmlTextWriter writer = new HtmlTextWriter(stringWriter))
             {
@@ -683,6 +739,9 @@ namespace ParseTxTconElinks
                 else if ((NombreSeccion.Length == 1) && (char.IsNumber(NombreSeccion[0])))
                     NombreSeccion = "Número " + NombreSeccion.ToUpperInvariant();
 
+                if (NombreSeccion == NombreSerie_SinIdentificar)
+                    NombreSeccion = "Nombre de la Serie " + NombreSerie_SinIdentificar.ToUpperInvariant();
+
                 writer.AddAttribute(HtmlTextWriterAttribute.Id, NombreSeccion);
                 writer.RenderBeginTag(HtmlTextWriterTag.Div); // Seccion Letra Inicial
                 writer.RenderBeginTag(HtmlTextWriterTag.H1);
@@ -690,7 +749,8 @@ namespace ParseTxTconElinks
                 writer.RenderEndTag(); // </h1>
 
                 // Ponemos el Nombre de todas las series que empiezan por esa letra:
-                if (NombreSeccion != NombreSerie_SinIdentificar)
+                if ((NombreSeccion != "Letra " + NombreSeccion.ToUpperInvariant())
+                    && (String.Compare(NombreSeccion, "Nombre de la Serie " + NombreSerie_SinIdentificar.ToUpperInvariant(), StringComparison.InvariantCultureIgnoreCase)) != 0)
                 {
                     writer.RenderBeginTag(HtmlTextWriterTag.P);
 
@@ -717,19 +777,15 @@ namespace ParseTxTconElinks
                                         
                     writer.RenderBeginTag(HtmlTextWriterTag.H3);
                     writer.Write(Serie.NombreSerie.ToUpperInvariant());
-
-
-                    if (NombreSeccion != NombreSerie_SinIdentificar)
-                    {
-                        // Boton muestra los eLinks en RAW (para copiarlos facilmente)
-                        // <button class="btn btn-info" onclick="Show_eLinks('NombreSerie')">Mostrar eLinks</button>
-                        writer.AddAttribute(HtmlTextWriterAttribute.Class, "btn btn-info");
-                        writer.AddAttribute(HtmlTextWriterAttribute.Onclick, "Show_eLinks('" + Serie.NombreSerie.ToUpperInvariant() + "')");
-                        writer.AddAttribute(HtmlTextWriterAttribute.Style, "margin-left: 20px");
-                        writer.RenderBeginTag(HtmlTextWriterTag.Button);
-                        writer.Write("Mostrar eLinks");
-                        writer.RenderEndTag(); // </button>
-                    }
+                    
+                    // Boton muestra los eLinks en RAW (para copiarlos facilmente)
+                    // <button class="btn btn-info" onclick="Show_eLinks('NombreSerie')">Mostrar eLinks</button>
+                    writer.AddAttribute(HtmlTextWriterAttribute.Class, "btn btn-info");
+                    writer.AddAttribute(HtmlTextWriterAttribute.Onclick, "Show_eLinks('" + Serie.NombreSerie.ToUpperInvariant() + "')");
+                    writer.AddAttribute(HtmlTextWriterAttribute.Style, "margin-left: 20px");
+                    writer.RenderBeginTag(HtmlTextWriterTag.Button);
+                    writer.Write("Mostrar eLinks");
+                    writer.RenderEndTag(); // </button>
 
                     writer.RenderEndTag(); // </h3>
 
@@ -791,7 +847,9 @@ namespace ParseTxTconElinks
         }
 
 
-        private string Generate_HTML_Menu(List<char> LetrasIniciales, string NombreRestoSeries)
+        private string Generate_HTML_Menu(List<char> LetrasIniciales, string NombreRestoSeries,
+                                          bool Add_Letter_Menu_Resto_Series,
+                                          bool Add_Letter_Menu_Series_Sin_Identificar)
         {
             // MENU para el acceso directo -> Letras Iniciales + "[0-9]" + "Otras"(NombreRestoSeries)  + "Sin Identificar"
 
@@ -830,17 +888,23 @@ namespace ParseTxTconElinks
                 writer.Write("[0-9]  ");
                 writer.RenderEndTag(); // </a>
 
-                string URL_Otras = "#" + NombreRestoSeries;
-                writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Otras);
-                writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
-                writer.Write("Otras  ");
-                writer.RenderEndTag(); // </a>
+                if (Add_Letter_Menu_Resto_Series)
+                {
+                    string URL_Otras = "#" + NombreRestoSeries;
+                    writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_Otras);
+                    writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                    writer.Write("Otras  ");
+                    writer.RenderEndTag(); // </a>
+                }
 
-                string URL_SinIdentificar = "#" + NombreSerie_SinIdentificar;
-                writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_SinIdentificar);
-                writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
-                writer.Write(NombreSerie_SinIdentificar);
-                writer.RenderEndTag(); // </a>
+                if (Add_Letter_Menu_Series_Sin_Identificar)
+                {
+                    string URL_SinIdentificar = "#Nombre de la Serie " + NombreSerie_SinIdentificar.ToUpperInvariant();
+                    writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_SinIdentificar);
+                    writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
+                    writer.Write(NombreSerie_SinIdentificar);
+                    writer.RenderEndTag(); // </a>
+                }
 
                 writer.Indent--;
 
@@ -1014,8 +1078,8 @@ namespace ParseTxTconElinks
                 writer.AddAttribute(HtmlTextWriterAttribute.Class, "dropdown-submenu");
                 writer.RenderBeginTag(HtmlTextWriterTag.Li);
                 writer.Indent++;
-                
-                string URL_SinIdentificar = "#" + NombreSerie_SinIdentificar;
+
+                string URL_SinIdentificar = "#Nombre de la Serie " + NombreSerie_SinIdentificar.ToUpperInvariant();
                 writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_SinIdentificar);
                 writer.RenderBeginTag(HtmlTextWriterTag.A); // <a href="eLink">
                 writer.Write(NombreSerie_SinIdentificar);
@@ -1212,7 +1276,7 @@ namespace ParseTxTconElinks
                 writer.RenderBeginTag(HtmlTextWriterTag.Li);
                 writer.Indent++;
 
-                string URL_SinIdentificar = "#" + NombreSerie_SinIdentificar;
+                string URL_SinIdentificar = "#Nombre de la Serie " + NombreSerie_SinIdentificar.ToUpperInvariant();
                 writer.AddAttribute(HtmlTextWriterAttribute.Href, URL_SinIdentificar);
                 writer.AddAttribute("data-target", "#demo" + counter.ToString());
 
@@ -1867,6 +1931,8 @@ namespace ParseTxTconElinks
         }
 
         #endregion
+
+
         
     }
 }

@@ -41,6 +41,8 @@
             this.button2 = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMenuItem_ProcesaTxTporSeparado = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -75,6 +77,8 @@
             this.toolStripDropDownButton_Opciones.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.toolStripDropDownButton_Opciones.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripDropDownButton_Opciones.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem_ProcesaTxTporSeparado,
+            this.toolStripSeparator1,
             this.toolStripMenuItem_HTML_TextoPlano,
             this.toolStripMenuItem_HTML_New});
             this.toolStripDropDownButton_Opciones.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton_Opciones.Image")));
@@ -88,7 +92,7 @@
             // 
             this.toolStripMenuItem_HTML_TextoPlano.CheckOnClick = true;
             this.toolStripMenuItem_HTML_TextoPlano.Name = "toolStripMenuItem_HTML_TextoPlano";
-            this.toolStripMenuItem_HTML_TextoPlano.Size = new System.Drawing.Size(172, 22);
+            this.toolStripMenuItem_HTML_TextoPlano.Size = new System.Drawing.Size(217, 22);
             this.toolStripMenuItem_HTML_TextoPlano.Text = "HTML Texto Plano";
             this.toolStripMenuItem_HTML_TextoPlano.Click += new System.EventHandler(this.toolStripMenuItem_HTML_TextoPlano_Click);
             // 
@@ -98,7 +102,7 @@
             this.toolStripMenuItem_HTML_New.CheckOnClick = true;
             this.toolStripMenuItem_HTML_New.CheckState = System.Windows.Forms.CheckState.Checked;
             this.toolStripMenuItem_HTML_New.Name = "toolStripMenuItem_HTML_New";
-            this.toolStripMenuItem_HTML_New.Size = new System.Drawing.Size(172, 22);
+            this.toolStripMenuItem_HTML_New.Size = new System.Drawing.Size(217, 22);
             this.toolStripMenuItem_HTML_New.Text = "HTML \"Bonito\"";
             this.toolStripMenuItem_HTML_New.Click += new System.EventHandler(this.toolStripMenuItem_HTML_New_Click);
             // 
@@ -120,7 +124,7 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
             this.splitContainer1.Size = new System.Drawing.Size(478, 237);
-            this.splitContainer1.SplitterDistance = 409;
+            this.splitContainer1.SplitterDistance = 412;
             this.splitContainer1.SplitterWidth = 1;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -134,7 +138,7 @@
             this.textBox_TxT_Path.Name = "textBox_TxT_Path";
             this.textBox_TxT_Path.ReadOnly = true;
             this.textBox_TxT_Path.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox_TxT_Path.Size = new System.Drawing.Size(409, 237);
+            this.textBox_TxT_Path.Size = new System.Drawing.Size(412, 237);
             this.textBox_TxT_Path.TabIndex = 0;
             this.textBox_TxT_Path.DragDrop += new System.Windows.Forms.DragEventHandler(this.textBox1_DragDrop);
             this.textBox_TxT_Path.DragOver += new System.Windows.Forms.DragEventHandler(this.textBox1_DragOver);
@@ -156,8 +160,8 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.button2);
-            this.splitContainer2.Size = new System.Drawing.Size(68, 237);
-            this.splitContainer2.SplitterDistance = 129;
+            this.splitContainer2.Size = new System.Drawing.Size(65, 237);
+            this.splitContainer2.SplitterDistance = 132;
             this.splitContainer2.SplitterWidth = 1;
             this.splitContainer2.TabIndex = 0;
             // 
@@ -166,7 +170,7 @@
             this.button1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.button1.Location = new System.Drawing.Point(0, 0);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(68, 129);
+            this.button1.Size = new System.Drawing.Size(65, 132);
             this.button1.TabIndex = 0;
             this.button1.Text = "Buscar txt con elinks";
             this.button1.UseVisualStyleBackColor = true;
@@ -179,7 +183,7 @@
             this.button2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.button2.Location = new System.Drawing.Point(0, 0);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(68, 107);
+            this.button2.Size = new System.Drawing.Size(65, 104);
             this.button2.TabIndex = 0;
             this.button2.Text = "Generar HTML";
             this.button2.UseVisualStyleBackColor = true;
@@ -203,6 +207,23 @@
             this.saveFileDialog1.SupportMultiDottedExtensions = true;
             this.saveFileDialog1.Title = "Guardar HTML con los eLinks procesados";
             this.saveFileDialog1.FileOk += new System.ComponentModel.CancelEventHandler(this.saveFileDialog1_FileOk);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(214, 6);
+            // 
+            // toolStripMenuItem_ProcesaTxTporSeparado
+            // 
+            this.toolStripMenuItem_ProcesaTxTporSeparado.AutoToolTip = true;
+            this.toolStripMenuItem_ProcesaTxTporSeparado.CheckOnClick = true;
+            this.toolStripMenuItem_ProcesaTxTporSeparado.Name = "toolStripMenuItem_ProcesaTxTporSeparado";
+            this.toolStripMenuItem_ProcesaTxTporSeparado.Size = new System.Drawing.Size(217, 22);
+            this.toolStripMenuItem_ProcesaTxTporSeparado.Text = "Procesa TxT\'s por separado";
+            this.toolStripMenuItem_ProcesaTxTporSeparado.ToolTipText = "Si no está marcada esta opción, \r\nse fusionará el contenido de todos los txt\'s.\r\n" +
+    "NOTA:\r\nLos HTML se guardaran con el mismo nombre\r\nque tengan los correspondiente" +
+    "s TxT\'s";
+            this.toolStripMenuItem_ProcesaTxTporSeparado.Click += new System.EventHandler(this.toolStripMenuItem_ProcesaTxTporSeparado_Click);
             // 
             // Form1
             // 
@@ -245,6 +266,8 @@
         private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButton_Opciones;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_HTML_TextoPlano;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_HTML_New;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_ProcesaTxTporSeparado;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }
 
