@@ -204,6 +204,11 @@ namespace ParseTxTconElinks
 
                             Convierte_TxT_Procesado_en_HTML(TxT_Procesado, Sort_Method, true, i);
                         }
+
+                        string Restult_OK_MSG = "Se ha completado el procesado de todos los TxT's"
+                                                + Environment.NewLine
+                                                + "y la generación de sus correspondientes HTML's.";
+                        MessageBox.Show(Restult_OK_MSG, "INFO", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     else
                     {
